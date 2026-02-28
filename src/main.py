@@ -31,7 +31,7 @@ class App(Cmd):
     def do_activate(self, _):
         """激活自动更换鼠标指针功能"""
         with open(
-            f"{getenv('APPDATA')}\\Microsoft\\Windows\\Start Menu\\Programs\\Startup\\change_cursor.ps1",
+            f"{getenv('APPDATA')}\\Microsoft\\Windows\\Start Menu\\Programs\\change_cursor.ps1",
             "w",
         ) as f:
             f.write("$commands={\n")
@@ -77,6 +77,8 @@ public class CursorHelper {
 """
             )
 
+        with open(f"{getenv('APPDATA')}\\Microsoft\\Windows\\Start Menu\\Programs\\Startup\\random_cursor.bat",'w') as f2:
+            f2.write("powershell ../change_cursor.ps1")
         print("已激活。")
 
     def do_a(self, _):
@@ -87,7 +89,7 @@ public class CursorHelper {
         """停用自动更换鼠标指针功能"""
         try:
             remove(
-                f"{getenv('APPDATA')}\\Microsoft\\Windows\\Start Menu\\Programs\\Startup\\change_cursor.ps1"
+                f"{getenv('APPDATA')}\\Microsoft\\Windows\\Start Menu\\Programs\\Startup\\random_cursor.bat"
             )
             print("已停用。")
         except FileNotFoundError:
