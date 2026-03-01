@@ -50,10 +50,14 @@ class App(Cmd):
                         f.write(
                             f'reg add "HKCU\\Control Panel\\Cursors" /ve /t REG_SZ /d "{name}" /f\n'
                         )
-                        for key, name in zip(KEYS, value.split(",")):
+                        values = value.split(",",14)
+                        if len(values) < 15:
+                            values.extend([""] * (15 - len(values)))
+                        for key, name in zip(KEYS, values):
                             f.write(
                                 f"reg add \"HKCU\\Control Panel\\Cursors\" /v {key} /t REG_EXPAND_SZ /d \"{name.strip(', ')}\" /f\n"
                             )
+                            # print(key,name) # debug
                     i += 1
                     f.write("},{\n")
                 except OSError:
