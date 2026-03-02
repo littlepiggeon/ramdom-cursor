@@ -10,7 +10,7 @@ KEYS = (
     "Wait",
     "Crosshair",
     "IBeam",
-    "Hand",
+    "NWPen",
     "No",
     "SizeNS",
     "SizeWE",
@@ -18,8 +18,24 @@ KEYS = (
     "SizeNESW",
     "SizeAll",
     "UpArrow",
-    "Link",
+    "Hand",
+    "Pin",
+    "Person"
 )
+
+
+def split_value(value: str) -> list:
+    result = []
+    current = ""
+    for i in value:
+        if i == ",":
+            result.append(current)
+            current = ""
+        else:
+            current += i
+    if current:
+        result.append(current)
+    return result
 
 
 class App(Cmd):
@@ -34,7 +50,7 @@ class App(Cmd):
             f"{getenv('APPDATA')}\\Microsoft\\Windows\\Start Menu\\Programs\\change_cursor.ps1",
             "w",
         ) as f:
-            f.write("$commands={\n")
+            f.write("$commands=")
 
             reg = winreg.OpenKey(
                 winreg.HKEY_CURRENT_USER,
@@ -46,26 +62,32 @@ class App(Cmd):
             while True:
                 try:
                     name, value, _ = winreg.EnumValue(reg, i)
+                    if i != 0:
+                        f.write(",\n")
                     if value:
                         f.write(
-                            f'reg add "HKCU\\Control Panel\\Cursors" /ve /t REG_SZ /d "{name}" /f\n'
+                            f'{{\nreg add "HKCU\\Control Panel\\Cursors" /ve /t REG_SZ /d "{name}" /f\n'
                         )
-                        values = value.split(",",14)
-                        if len(values) < 15:
-                            values.extend([""] * (15 - len(values)))
-                        for key, name in zip(KEYS, values):
-                            f.write(
-                                f"reg add \"HKCU\\Control Panel\\Cursors\" /v {key} /t REG_EXPAND_SZ /d \"{name.strip(', ')}\" /f\n"
-                            )
-                            # print(key,name) # debug
+                        values = split_value(value)
+                        if len(values) < 17:
+                            values.extend([""] * (17 - len(values)))
+                        for k, v in zip(KEYS, values):
+                            if v:
+                                f.write(
+                                    f"reg add \"HKCU\\Control Panel\\Cursors\" /f /v {k} /t REG_EXPAND_SZ /d \"{v.strip(', ')}\"\n"
+                                )
+                            else:
+                                f.write(
+                                    f"reg add \"HKCU\\Control Panel\\Cursors\" /f /v {k} /t REG_EXPAND_SZ\n"
+                                )
                     i += 1
-                    f.write("},{\n")
+                    f.write("}")
                 except OSError:
-                    f.write("}\n")
                     break
 
             f.write(
-                """$randomCommand=Get-Random -InputObject $commands
+                """
+$randomCommand=Get-Random -InputObject $commands
 & $randomCommand
 
 Add-Type @"
@@ -81,7 +103,10 @@ public class CursorHelper {
 """
             )
 
-        with open(f"{getenv('APPDATA')}\\Microsoft\\Windows\\Start Menu\\Programs\\Startup\\random_cursor.bat",'w') as f2:
+        with open(
+            f"{getenv('APPDATA')}\\Microsoft\\Windows\\Start Menu\\Programs\\Startup\\random_cursor.bat",
+            "w",
+        ) as f2:
             f2.write("powershell ../change_cursor.ps1")
         print("已激活。")
 
